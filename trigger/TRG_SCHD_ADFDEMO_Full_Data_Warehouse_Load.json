@@ -1,0 +1,33 @@
+{
+	"name": "TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load",
+	"properties": {
+		"description": "Triggers the full end-to-end ETL pipeline (which calls all other pipelines) on schedule - this is likely to be daily overnight in each environment.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_MAIN_ADFDEMO_Full_Data_Warehouse_Load",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2020-08-01T12:00:00Z",
+				"timeZone": "UTC",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						1
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,102 @@
+{
+	"name": "PL_MAIN_ADFDEMO_Full_Data_Warehouse_Load",
+	"properties": {
+		"description": "Full end-to-end ADFDEMO ETL Pipeline - calls each of the MAIN level pipelines in the order configured in the SQL table, Config.ADFMainPipelines.",
+		"activities": [
+			{
+				"name": "Lookup Active Pipelines",
+				"description": "Retrieve all active top level Pipeline configuration records",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Config].[usp_GetActiveADFMainPipelines]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL_Common_Table",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "Config",
+							"Table": "ADFMainPipelines"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Active Pipeline",
+				"description": "For each active top level pipeline configuration, execute the pipeline using the retrieved pipeline name.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup Active Pipelines",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup Active Pipelines').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Switch on Pipeline Name",
+							"description": "ADF doesn't support dynamically calling pipelines using parameters, so need to create switch statement based on Pipeline name.",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@item().PipelineName",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "PL_MAIN_FHRS_Load_Establishments_And_Authorities",
+										"activities": [
+											{
+												"name": "Execute FHRS Load Establishments And Authorities",
+												"description": "Call the PL_MAIN_FHRS_Load_Establishments_And_Authorities top level ETL pipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_MAIN_FHRS_Load_Establishments_And_Authorities",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"PipelineName": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

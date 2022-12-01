@@ -1,0 +1,720 @@
+{
+	"name": "PL_COPY_FHRS_Establishments_By_Authority",
+	"properties": {
+		"description": "Retrieve all Establishments for a single Authority from the FHRS API and land to Data Lake and SQL table",
+		"activities": [
+			{
+				"name": "Copy Establishments to Data Lake",
+				"description": "Retrieve all Establishments for a specific Local Authority via FHRS API and land to single timestamped JSON file in Data Lake",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set FileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"additionalHeaders": {
+							"x-api-version": "2"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings",
+							"quoteAllText": true
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_REST_FHRS_Establishments_By_Authority",
+						"type": "DatasetReference",
+						"parameters": {
+							"LocalAuthorityId": {
+								"value": "@pipeline().parameters.LocalAuthorityId",
+								"type": "Expression"
+							},
+							"BusinessTypeId": 5
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Common_Json_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": {
+								"value": "@variables('ContainerName')",
+								"type": "Expression"
+							},
+							"FolderName": {
+								"value": "@variables('FolderName')",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@variables('FileName')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Log Activity - Copy Establishments to Data Lake",
+				"description": "Log Activity for Copy Establishments to Data Lake",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Establishments to Data Lake",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineActivity",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Establishments to Data Lake",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Establishments to Data Lake').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ActivityMessage": {
+							"value": "@concat('Saved Json file: ',variables('ContainerName'),'/',variables('FolderName'),'/',variables('FileName'))",
+							"type": "Expression"
+						},
+						"CopyActivityRowsCopied": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityRowsRead": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityDurationSeconds": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.copyDuration}",
+							"type": "Expression"
+						},
+						"CopyActivitySourceType": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].source.type}",
+							"type": "Expression"
+						},
+						"CopyActivitySinkType": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].sink.type}",
+							"type": "Expression"
+						},
+						"CopyActivityExecutionStatus": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].status}",
+							"type": "Expression"
+						},
+						"CopyActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log Error - Copy Establishments to Data Lake",
+				"description": "Log Errors for Copy Establishments to Data Lake",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Establishments to Data Lake",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineError",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Establishments to Data Lake",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Establishments to Data Lake').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ErrorMessage": {
+							"value": "@{activity('Copy Establishments to Data Lake').Error.message}",
+							"type": "Expression"
+						},
+						"ErrorCode": {
+							"value": "@{activity('Copy Establishments to Data Lake').Error.errorCode}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Establishments to Staging",
+				"description": "Retrieve all Establishments for a specific Local Authority via FHRS API and land to SQL Staging table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy Establishments to Data Lake",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['FHRSID']"
+								},
+								"sink": {
+									"name": "FHRSID",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityBusinessID']"
+								},
+								"sink": {
+									"name": "LocalAuthorityBusinessID",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['BusinessName']"
+								},
+								"sink": {
+									"name": "BusinessName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['BusinessType']"
+								},
+								"sink": {
+									"name": "BusinessType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['BusinessTypeID']"
+								},
+								"sink": {
+									"name": "BusinessTypeID",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['AddressLine1']"
+								},
+								"sink": {
+									"name": "AddressLine1",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['AddressLine2']"
+								},
+								"sink": {
+									"name": "AddressLine2",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['AddressLine3']"
+								},
+								"sink": {
+									"name": "AddressLine3",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['AddressLine4']"
+								},
+								"sink": {
+									"name": "AddressLine4",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['PostCode']"
+								},
+								"sink": {
+									"name": "PostCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Phone']"
+								},
+								"sink": {
+									"name": "Phone",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['RatingValue']"
+								},
+								"sink": {
+									"name": "RatingValue",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['RatingKey']"
+								},
+								"sink": {
+									"name": "RatingKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['RatingDate']"
+								},
+								"sink": {
+									"name": "RatingDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityCode']"
+								},
+								"sink": {
+									"name": "LocalAuthorityCode",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityName']"
+								},
+								"sink": {
+									"name": "LocalAuthorityName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityWebSite']"
+								},
+								"sink": {
+									"name": "LocalAuthorityWebSite",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityEmailAddress']"
+								},
+								"sink": {
+									"name": "LocalAuthorityEmailAddress",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['scores']['Hygiene']"
+								},
+								"sink": {
+									"name": "HygieneScore",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['scores']['Structural']"
+								},
+								"sink": {
+									"name": "StructuralScore",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['scores']['ConfidenceInManagement']"
+								},
+								"sink": {
+									"name": "ConfidenceInManagementScore",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['SchemeType']"
+								},
+								"sink": {
+									"name": "SchemeType",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['geocode']['longitude']"
+								},
+								"sink": {
+									"name": "Longitude",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['geocode']['latitude']"
+								},
+								"sink": {
+									"name": "Latitude",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['RightToReply']"
+								},
+								"sink": {
+									"name": "RightToReply",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Distance']"
+								},
+								"sink": {
+									"name": "Distance",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['NewRatingPending']"
+								},
+								"sink": {
+									"name": "NewRatingPending",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['links'][0]['href']"
+								},
+								"sink": {
+									"name": "LinkHREF",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['establishments']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Common_Json_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": {
+								"value": "@variables('ContainerName')",
+								"type": "Expression"
+							},
+							"FolderName": {
+								"value": "@variables('FolderName')",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@variables('FileName')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ASQL_FHRS_Establishments",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Log Activity - Copy Establishments to Staging",
+				"description": "Log Activity for Copy Establishments to Staging",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Establishments to Staging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineActivity",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Establishments to Staging",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Establishments to Staging').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ActivityMessage": {
+							"value": "@concat('Loaded to Staging Table for Authority: ',pipeline().parameters.LocalAuthorityName,' (',pipeline().parameters.LocalAuthorityCode,')')",
+							"type": "Expression"
+						},
+						"CopyActivityRowsCopied": {
+							"value": "@{activity('Copy Establishments to Staging').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityRowsRead": {
+							"value": "@{activity('Copy Establishments to Staging').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityDurationSeconds": {
+							"value": "@{activity('Copy Establishments to Staging').output.copyDuration}",
+							"type": "Expression"
+						},
+						"CopyActivitySourceType": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].source.type}",
+							"type": "Expression"
+						},
+						"CopyActivitySinkType": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].sink.type}",
+							"type": "Expression"
+						},
+						"CopyActivityExecutionStatus": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].status}",
+							"type": "Expression"
+						},
+						"CopyActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log Error - Copy Establishments to Staging",
+				"description": "Log Errors for Copy Establishments to Staging",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Establishments to Staging",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineError",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Establishments to Staging",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Establishments to Staging').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Establishments to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ErrorMessage": {
+							"value": "@{activity('Copy Establishments to Staging').Error.message}",
+							"type": "Expression"
+						},
+						"ErrorCode": {
+							"value": "@{activity('Copy Establishments to Staging').Error.errorCode}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set FolderName",
+				"description": "Set folder name required to land JSON file",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FolderName",
+					"value": {
+						"value": "@concat('FHRS/Establishments/',pipeline().parameters.LocalAuthorityName,' (',pipeline().parameters.LocalAuthorityCode,')')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set FileName",
+				"description": "Set filename required to land JSON file",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set FolderName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FileName",
+					"value": {
+						"value": "@concat('Establishments_',formatDateTime(utcnow(),'yyyyMMddHHmmss'),'.json')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"LocalAuthorityId": {
+				"type": "int"
+			},
+			"LocalAuthorityCode": {
+				"type": "string"
+			},
+			"LocalAuthorityName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"ContainerName": {
+				"type": "String",
+				"defaultValue": "raw"
+			},
+			"FolderName": {
+				"type": "String"
+			},
+			"FileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": []
+	}
+}

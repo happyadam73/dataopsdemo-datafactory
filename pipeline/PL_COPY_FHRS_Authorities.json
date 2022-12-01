@@ -1,0 +1,562 @@
+{
+	"name": "PL_COPY_FHRS_Authorities",
+	"properties": {
+		"description": "Retrieve all Authorities from FHRS API and land to Data Lake and SQL table",
+		"activities": [
+			{
+				"name": "Copy Authorities to Data Lake",
+				"description": "Retrieve all Authorities via FHRS API and land to single timestamped JSON file in Data Lake",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set FileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"additionalHeaders": {
+							"x-api-version": "2"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings",
+							"quoteAllText": true
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_REST_FHRS_Authorities",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Common_Json_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": {
+								"value": "@variables('ContainerName')",
+								"type": "Expression"
+							},
+							"FolderName": {
+								"value": "@variables('FolderName')",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@variables('FileName')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Log Activity - Copy Authorities to Data Lake",
+				"description": "Log Activity for Copy Authorities to Data Lake",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Authorities to Data Lake",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineActivity",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Authorities to Data Lake",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Authorities to Data Lake').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ActivityMessage": {
+							"value": "@concat('Saved Json file: ',variables('ContainerName'),'/',variables('FolderName'),'/',variables('FileName'))",
+							"type": "Expression"
+						},
+						"CopyActivityRowsCopied": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityRowsRead": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityDurationSeconds": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.copyDuration}",
+							"type": "Expression"
+						},
+						"CopyActivitySourceType": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].source.type}",
+							"type": "Expression"
+						},
+						"CopyActivitySinkType": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].sink.type}",
+							"type": "Expression"
+						},
+						"CopyActivityExecutionStatus": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].status}",
+							"type": "Expression"
+						},
+						"CopyActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log Error - Copy Authorities to Data Lake",
+				"description": "Log Errors for Copy Authorities to Data Lake",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Authorities to Data Lake",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineError",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Authorities to Data Lake",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Authorities to Data Lake').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Data Lake').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ErrorMessage": {
+							"value": "@{activity('Copy Authorities to Data Lake').Error.message}",
+							"type": "Expression"
+						},
+						"ErrorCode": {
+							"value": "@{activity('Copy Authorities to Data Lake').Error.errorCode}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Authorities to Staging",
+				"description": "Retrieve all Authorities via FHRS API and land to SQL Staging table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy Authorities to Data Lake",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['LocalAuthorityId']"
+								},
+								"sink": {
+									"name": "LocalAuthorityId",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['LocalAuthorityIdCode']"
+								},
+								"sink": {
+									"name": "LocalAuthorityIdCode",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['Name']"
+								},
+								"sink": {
+									"name": "Name",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['FriendlyName']"
+								},
+								"sink": {
+									"name": "FriendlyName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Url']"
+								},
+								"sink": {
+									"name": "Url",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['SchemeUrl']"
+								},
+								"sink": {
+									"name": "SchemeUrl",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Email']"
+								},
+								"sink": {
+									"name": "Email",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['RegionName']"
+								},
+								"sink": {
+									"name": "RegionName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['FileName']"
+								},
+								"sink": {
+									"name": "FileName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['FileNameWelsh']"
+								},
+								"sink": {
+									"name": "FileNameWelsh",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['EstablishmentCount']"
+								},
+								"sink": {
+									"name": "EstablishmentCount",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['CreationDate']"
+								},
+								"sink": {
+									"name": "CreationDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['LastPublishedDate']"
+								},
+								"sink": {
+									"name": "LastPublishedDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['SchemeType']"
+								},
+								"sink": {
+									"name": "SchemeType",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['links'][0]['href']"
+								},
+								"sink": {
+									"name": "LinkHref",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['authorities']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Common_Json_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": {
+								"value": "@variables('ContainerName')",
+								"type": "Expression"
+							},
+							"FolderName": {
+								"value": "@variables('FolderName')",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@variables('FileName')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ASQL_FHRS_Authorities",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Log Activity - Copy Authorities to Staging",
+				"description": "Log Activity for Copy Authorities to Staging",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Authorities to Staging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineActivity",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Authorities to Staging",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Authorities to Staging').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ActivityMessage": "Loading all Authorities in Staging Table",
+						"CopyActivityRowsCopied": {
+							"value": "@{activity('Copy Authorities to Staging').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityRowsRead": {
+							"value": "@{activity('Copy Authorities to Staging').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityDurationSeconds": {
+							"value": "@{activity('Copy Authorities to Staging').output.copyDuration}",
+							"type": "Expression"
+						},
+						"CopyActivitySourceType": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].source.type}",
+							"type": "Expression"
+						},
+						"CopyActivitySinkType": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].sink.type}",
+							"type": "Expression"
+						},
+						"CopyActivityExecutionStatus": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].status}",
+							"type": "Expression"
+						},
+						"CopyActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log Error - Copy Authorities to Staging",
+				"description": "Log Errors for Copy Authorities to Staging",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Authorities to Staging",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineError",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Authorities to Staging",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Authorities to Staging').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Authorities to Staging').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ErrorMessage": {
+							"value": "@{activity('Copy Authorities to Staging').Error.message}",
+							"type": "Expression"
+						},
+						"ErrorCode": {
+							"value": "@{activity('Copy Authorities to Staging').Error.errorCode}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set FileName",
+				"description": "Set filename required to land JSON file",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FileName",
+					"value": {
+						"value": "@concat('Authorities_',formatDateTime(utcnow(),'yyyyMMddHHmmss'),'.json')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"ContainerName": {
+				"type": "String",
+				"defaultValue": "raw"
+			},
+			"FolderName": {
+				"type": "String",
+				"defaultValue": "FHRS/Authorities"
+			},
+			"FileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": []
+	}
+}

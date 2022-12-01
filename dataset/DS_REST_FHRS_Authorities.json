@@ -1,0 +1,19 @@
+{
+	"name": "DS_REST_FHRS_Authorities",
+	"properties": {
+		"description": "Local Authorities data-set for FHRS API",
+		"linkedServiceName": {
+			"referenceName": "LS_REST_FHRS_API",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": "Authorities"
+		},
+		"schema": []
+	}
+}

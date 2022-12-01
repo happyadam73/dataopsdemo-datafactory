@@ -1,0 +1,88 @@
+{
+	"name": "DS_ASQL_FHRS_Authorities_Lookup",
+	"properties": {
+		"description": "SQL Data-set containing FHRS Authorities for use by Authority Lookup activity.",
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_ADFDEMO_DW",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "LocalAuthorityId",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "LocalAuthorityIdCode",
+				"type": "varchar"
+			},
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "FriendlyName",
+				"type": "varchar"
+			},
+			{
+				"name": "Url",
+				"type": "varchar"
+			},
+			{
+				"name": "SchemeUrl",
+				"type": "varchar"
+			},
+			{
+				"name": "Email",
+				"type": "varchar"
+			},
+			{
+				"name": "RegionName",
+				"type": "varchar"
+			},
+			{
+				"name": "FileName",
+				"type": "varchar"
+			},
+			{
+				"name": "FileNameWelsh",
+				"type": "varchar"
+			},
+			{
+				"name": "EstablishmentCount",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "CreationDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LastPublishedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SchemeType",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "LinkHref",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "FHRS",
+			"table": "Authorities"
+		}
+	}
+}

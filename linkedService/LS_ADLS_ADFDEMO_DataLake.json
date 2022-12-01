@@ -1,0 +1,19 @@
+{
+	"name": "LS_ADLS_ADFDEMO_DataLake",
+	"properties": {
+		"description": "Connection to main Azure Data Lake storage account.  Accessed via account key held in key vault.",
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://adlsawbcicddemodevneur2.dfs.core.windows.net/",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV_ADFDEMO_KeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adlsawbcicddemodevneur2-key"
+			}
+		}
+	}
+}

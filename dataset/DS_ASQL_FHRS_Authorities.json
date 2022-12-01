@@ -1,0 +1,94 @@
+{
+	"name": "DS_ASQL_FHRS_Authorities",
+	"properties": {
+		"description": "Data-set for the Staging.Authorities table in the main database for landing FHRS authorities data",
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_ADFDEMO_DW",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "RowId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LocalAuthorityId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LocalAuthorityIdCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "FriendlyName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Url",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SchemeUrl",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Email",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RegionName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "FileName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "FileNameWelsh",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EstablishmentCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CreationDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LastPublishedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SchemeType",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LinkHref",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "FHRSAuthorities"
+		}
+	}
+}

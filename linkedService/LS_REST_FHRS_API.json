@@ -1,0 +1,13 @@
+{
+	"name": "LS_REST_FHRS_API",
+	"properties": {
+		"description": "Linked service for anonymous access to the Food Hygiene Ratings Scheme API",
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://api.ratings.food.gov.uk/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

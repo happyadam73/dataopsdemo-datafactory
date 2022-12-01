@@ -1,0 +1,31 @@
+{
+	"name": "DS_REST_FHRS_Establishments_By_Authority",
+	"properties": {
+		"description": "Establishments data-set for FHRS API based on a specific Authority ID",
+		"linkedServiceName": {
+			"referenceName": "LS_REST_FHRS_API",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"LocalAuthorityId": {
+				"type": "int"
+			},
+			"BusinessTypeId": {
+				"type": "int",
+				"defaultValue": 5
+			}
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat('Establishments?localAuthorityId=',string(dataset().LocalAuthorityId),'&businessTypeId=',string(dataset().BusinessTypeId))",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"name": "LS_AKV_ADFDEMO_KeyVault",
+	"properties": {
+		"description": "Main project Key Vault which contains connection keys for storage accounts and other secrets/credentials.",
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kvawbcicddemodevneur2.vault.azure.net/"
+		}
+	}
+}

@@ -1,0 +1,188 @@
+{
+	"name": "PL_UTIL_LogPipelineActivity",
+	"properties": {
+		"description": "Generic utility pipeline for logging pipeline activity to an Azure SQL Activity Log",
+		"activities": [
+			{
+				"name": "Log Activity",
+				"description": "Log activity using the usp_LogADFPipelineActivity procedure",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Audit].[usp_LogADFPipelineActivity]",
+					"storedProcedureParameters": {
+						"activity_message": {
+							"value": {
+								"value": "@pipeline().parameters.ActivityMessage",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"activity_name": {
+							"value": {
+								"value": "@pipeline().parameters.ActivityName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"activity_run_id": {
+							"value": {
+								"value": "@pipeline().parameters.ActivityRunID",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"activity_start_time": {
+							"value": {
+								"value": "@pipeline().parameters.ActivityStartTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"copy_activity_duration_seconds": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivityDurationSeconds",
+								"type": "Expression"
+							},
+							"type": "Int32"
+						},
+						"copy_activity_execution_status": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivityExecutionStatus",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"copy_activity_rows_copied": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivityRowsCopied",
+								"type": "Expression"
+							},
+							"type": "Int32"
+						},
+						"copy_activity_rows_read": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivityRowsRead",
+								"type": "Expression"
+							},
+							"type": "Int32"
+						},
+						"copy_activity_sink_type": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivitySinkType",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"copy_activity_source_type": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivitySourceType",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"copy_activity_start_time": {
+							"value": {
+								"value": "@pipeline().parameters.CopyActivityStartTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"data_factory_name": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipeline_name": {
+							"value": {
+								"value": "@pipeline().parameters.PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipeline_run_id": {
+							"value": {
+								"value": "@pipeline().parameters.PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipeline_trigger_time": {
+							"value": {
+								"value": "@pipeline().parameters.PipelineTriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_ADFDEMO_DW",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"PipelineName": {
+				"type": "string"
+			},
+			"PipelineRunId": {
+				"type": "string"
+			},
+			"PipelineTriggerTime": {
+				"type": "string"
+			},
+			"ActivityName": {
+				"type": "string"
+			},
+			"ActivityRunID": {
+				"type": "string"
+			},
+			"ActivityStartTime": {
+				"type": "string"
+			},
+			"ActivityMessage": {
+				"type": "string"
+			},
+			"CopyActivityRowsCopied": {
+				"type": "int",
+				"defaultValue": 0
+			},
+			"CopyActivityRowsRead": {
+				"type": "int",
+				"defaultValue": 0
+			},
+			"CopyActivityDurationSeconds": {
+				"type": "int",
+				"defaultValue": 0
+			},
+			"CopyActivitySourceType": {
+				"type": "string"
+			},
+			"CopyActivitySinkType": {
+				"type": "string"
+			},
+			"CopyActivityExecutionStatus": {
+				"type": "string"
+			},
+			"CopyActivityStartTime": {
+				"type": "string",
+				"defaultValue": "00:00:00"
+			}
+		},
+		"folder": {
+			"name": "Auditing"
+		},
+		"annotations": []
+	}
+}

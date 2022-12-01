@@ -1,0 +1,60 @@
+{
+	"name": "DS_ASQL_ForTestingLogging",
+	"properties": {
+		"description": "Dataset required for the Error/Auditing Testing Pipeline",
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_ADFDEMO_DW",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Testing"
+		},
+		"annotations": [
+			"IsTestingOnly"
+		],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ActivityLogID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ActivityProcessID",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "ActivityUserName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ActivityProc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ActivityCategory",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ActivityMessage",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ActivityRowsAffected",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "ActivityDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Audit",
+			"table": "DatabaseActivityLog"
+		}
+	}
+}

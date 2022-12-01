@@ -1,0 +1,12 @@
+{
+	"name": "adf-awbcicddemo-dev-neur-2",
+	"properties": {
+		"globalParameters": {
+			"environment": {
+				"type": "string",
+				"value": "dev"
+			}
+		}
+	},
+	"location": "northeurope"
+}

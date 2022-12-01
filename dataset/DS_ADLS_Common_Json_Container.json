@@ -1,0 +1,31 @@
+{
+	"name": "DS_ADLS_Common_Json_Container",
+	"properties": {
+		"description": "Generic data-set for landing a JSon file into the main data lake for a specific container - for use with wildcard paths where the container is required in the data-set",
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_ADFDEMO_DataLake",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ContainerName": {
+				"type": "string",
+				"defaultValue": "raw"
+			}
+		},
+		"folder": {
+			"name": "Common"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": {
+					"value": "@dataset().ContainerName",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	}
+}

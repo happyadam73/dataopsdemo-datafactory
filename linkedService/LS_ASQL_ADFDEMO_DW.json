@@ -1,0 +1,12 @@
+{
+	"name": "LS_ASQL_ADFDEMO_DW",
+	"properties": {
+		"description": "Connection to ADFDEMO Azure SQL main Database",
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sqlsvr-awbcicddemo-dev-neur-2.database.windows.net;Initial Catalog=sqldb-awbcicddemo-dev-neur-2"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
+}

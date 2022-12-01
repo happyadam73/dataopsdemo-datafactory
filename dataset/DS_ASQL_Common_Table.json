@@ -1,0 +1,35 @@
+{
+	"name": "DS_ASQL_Common_Table",
+	"properties": {
+		"description": "Generic data-set for an Azure SQL Database table based on the LS_ASQL_ADFDEMO_DW linked service.",
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_ADFDEMO_DW",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Schema": {
+				"type": "string",
+				"defaultValue": "dbo"
+			},
+			"Table": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Common"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().Schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().Table",
+				"type": "Expression"
+			}
+		}
+	}
+}

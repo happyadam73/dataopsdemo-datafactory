@@ -1,0 +1,195 @@
+{
+	"name": "PL_MAIN_FHRS_Load_Establishments_And_Authorities",
+	"properties": {
+		"description": "Main pipeline for ingesting Establishments and Authorities using the Food Hygience Rating Scheme (FHRS) API.  This currently retrieves only Caring type establishments in the London region.",
+		"activities": [
+			{
+				"name": "Lookup London Authorities",
+				"description": "Retrieve all FHRS Authorities based in London Region",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Load Authorities from Staging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[FHRS].[usp_GetLocalAuthoritiesLookupData]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL_FHRS_Authorities_Lookup",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Authority",
+				"description": "Iterate through each of the authorites returned by the Lookup activity",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup London Authorities",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup London Authorities').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy Establishments for Single Authority",
+							"description": "Calls the Establishment copy pipeline passing to it the Local Authority parameters.",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_COPY_FHRS_Establishments_By_Authority",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"LocalAuthorityId": {
+										"value": "@item().LocalAuthorityId",
+										"type": "Expression"
+									},
+									"LocalAuthorityCode": {
+										"value": "@item().LocalAuthorityIdCode",
+										"type": "Expression"
+									},
+									"LocalAuthorityName": {
+										"value": "@item().Name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Initialise FHRS Load",
+				"description": "Clear down the Staging tables for Establishments and Authorities and any other initialisation processing",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Staging].[usp_InitialiseFHRSLoading]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_ADFDEMO_DW",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Copy All Authorities",
+				"description": "Calls the Authority copy pipeline.",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Initialise FHRS Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_COPY_FHRS_Authorities",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Load Authorities from Staging",
+				"description": "Merge the Staged Authorities table into the final destination FHRS.Authorities table",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy All Authorities",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Staging].[usp_LoadFHRSAuthoritiesFromStaging]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_ADFDEMO_DW",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Load Establishments from Staging",
+				"description": "Merge the Staged Establishments table into the final destination FHRS.Establishments table",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "For Each Authority",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Staging].[usp_LoadFHRSEstablishmentsFromStaging]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_ADFDEMO_DW",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": []
+	}
+}

@@ -1,0 +1,261 @@
+{
+	"name": "PL_TEST_TestErrorAndActivityLogging",
+	"properties": {
+		"description": "Pipeline for Testing Purposes only - can either log pipeline activity or errors based on the parameter passsed to the pipeline (0 to raise error)",
+		"activities": [
+			{
+				"name": "Copy Data",
+				"description": "Perform a test copy by retrieving some data and then using a SQL query as the sink - which either suceeds or fails.  To fail, the parameter is set to zero to force the query to perform a divide by zero error.",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": {
+							"value": "@{concat('SELECT 1/',string(pipeline().parameters.SetToZeroToError))}",
+							"type": "Expression"
+						},
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "ActivityProcessID",
+									"type": "Int16"
+								},
+								"sink": {
+									"name": "ActivityProcessID",
+									"type": "Int16"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityUserName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ActivityUserName",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityProc",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ActivityProc",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityCategory",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ActivityCategory",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityMessage",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ActivityMessage",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityRowsAffected",
+									"type": "Int64"
+								},
+								"sink": {
+									"name": "ActivityRowsAffected",
+									"type": "Int64"
+								}
+							},
+							{
+								"source": {
+									"name": "ActivityDate",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "ActivityDate",
+									"type": "DateTime"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ASQL_ForTestingLogging",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ASQL_ForTestingLogging",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Log Activity",
+				"description": "If the query was successful, then logs the activity",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineActivity",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Data",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Data').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ActivityMessage": "Test of copying data",
+						"CopyActivityRowsCopied": {
+							"value": "@{activity('Copy Data').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityRowsRead": {
+							"value": "@{activity('Copy Data').output.rowsCopied}",
+							"type": "Expression"
+						},
+						"CopyActivityDurationSeconds": {
+							"value": "@{activity('Copy Data').output.copyDuration}",
+							"type": "Expression"
+						},
+						"CopyActivitySourceType": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].source.type}",
+							"type": "Expression"
+						},
+						"CopyActivitySinkType": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].sink.type}",
+							"type": "Expression"
+						},
+						"CopyActivityExecutionStatus": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].status}",
+							"type": "Expression"
+						},
+						"CopyActivityStartTime": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].start}",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log Error",
+				"description": "If the query has failed, then logs the error.",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Data",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_UTIL_LogPipelineError",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"PipelineTriggerTime": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						},
+						"ActivityName": "Copy Data",
+						"ActivityRunID": {
+							"value": "@{activity('Copy Data').ActivityRunId}",
+							"type": "Expression"
+						},
+						"ActivityStartTime": {
+							"value": "@{activity('Copy Data').output.executionDetails[0].start}",
+							"type": "Expression"
+						},
+						"ErrorMessage": {
+							"value": "@{activity('Copy Data').Error.message}",
+							"type": "Expression"
+						},
+						"ErrorCode": {
+							"value": "@{activity('Copy Data').Error.errorCode}",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"SetToZeroToError": {
+				"type": "int",
+				"defaultValue": 1
+			}
+		},
+		"folder": {
+			"name": "Testing"
+		},
+		"annotations": [
+			"IsTestingOnly"
+		]
+	}
+}

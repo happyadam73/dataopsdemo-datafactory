@@ -1,0 +1,152 @@
+{
+	"name": "DS_ASQL_FHRS_Establishments",
+	"properties": {
+		"description": "Data-set for the Staging.Establishments table in the main database for landing FHRS establishments data (by Authority ID)",
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_ADFDEMO_DW",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "FHRS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "RowId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FHRSID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LocalAuthorityBusinessID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "BusinessName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "BusinessType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "BusinessTypeID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AddressLine1",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AddressLine2",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AddressLine3",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AddressLine4",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PostCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Phone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RatingValue",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RatingKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RatingDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LocalAuthorityCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LocalAuthorityName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LocalAuthorityWebSite",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LocalAuthorityEmailAddress",
+				"type": "nvarchar"
+			},
+			{
+				"name": "HygieneScore",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "StructuralScore",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ConfidenceInManagementScore",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SchemeType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Longitude",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 6
+			},
+			{
+				"name": "Latitude",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 6
+			},
+			{
+				"name": "RightToReply",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Distance",
+				"type": "decimal",
+				"precision": 11,
+				"scale": 6
+			},
+			{
+				"name": "NewRatingPending",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LinkHREF",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "FHRSEstablishments"
+		}
+	}
+}
