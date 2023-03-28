@@ -1,8 +1,28 @@
-# Sample YAML file to validate and export an ARM template into a build artifact
+# 
+# Build YAML file for Azure Data Factory Builds using the azure-data-factory-utilities Node package
+# See: https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-improvements
 # Requires a package.json file located in the target repository
+#
+# This version of the build also includes additional steps to commit the ARM templates generated 
+# to either deployments/main-adf-templates or deployments/release-adf-templates branches  
+# similar to the adf_publish behaviour with the manual publish (but based on build branch)
+#
+# main: configured as collaboration branch (Git Config in ADF Development instance)
+# release: used for deployments to pre-production/production ADF instances
+#
+# Workflow:
+#   1) Developer creates feature branch in ADF and makes changes on this branch
+#   2) Developer raises Pull Request to merge to main
+#   3) Merge to main branch triggers this build pipeline (on main), which generates Build Artifact, and adds ARM teplates to deployments/main-adf-templates branch
+#   4) Release Pipeline is triggered from this build pipeline (based on new artifact) - Artifact filter based on "main" branch results in deployment to Development instance of ADF
+#   5) Release Manager raised Pull Request (or Cherry Picks PRs) to merge to release
+#   6) Merge to release branch triggers this build pipeline (on release), which generates Build Artifact, and adds ARM teplates to deployments/release-adf-templates branch
+#   7) Release Pipeline is triggered from this build pipeline (based on new artifact) - Artifact filter based on "release" branch results in deployment to Pre-production instance of ADF
+#   8) Approval then required on Release Pipeline to deploy to Production
+#
 
 trigger:
-- main #collaboration branch
+- none # use override YAML trigger to setup CI trigger on main/release
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -36,7 +56,7 @@ steps:
   inputs:
     command: 'custom'
     workingDir: '$(Build.Repository.LocalPath)/$(BuildFolder)' #replace with the package.json folder
-    customCommand: 'run build validate $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(DevelopmentResourceGroup)/providers/Microsoft.DataFactory/factories/$(DevelopmentDataFactory)'
+    customCommand: 'run build validate $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(ResourceGroup)/providers/Microsoft.DataFactory/factories/$(DataFactoryName)'
   displayName: 'Validate'
 
 # Validate and then generate the ARM template into the destination folder, which is the same as selecting "Publish" from the UX.
@@ -46,9 +66,9 @@ steps:
   inputs:
     command: 'custom'
     workingDir: '$(Build.Repository.LocalPath)/$(BuildFolder)' #replace with the package.json folder
-    customCommand: 'run build export $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(DevelopmentResourceGroup)/providers/Microsoft.DataFactory/factories/$(DevelopmentDataFactory) "$(ArmTemplateFolder)"'
+    customCommand: 'run build export $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(ResourceGroup)/providers/Microsoft.DataFactory/factories/$(DataFactoryName) "$(ArmTemplateFolder)"'
 #For using preview that allows you to only stop/ start triggers that are modified, please comment out the above line and uncomment the below line. Make sure the package.json contains the build-preview command. 
- #customCommand: 'run build-preview export $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(DevelopmentResourceGroup)/providers/Microsoft.DataFactory/factories/$(DevelopmentDataFactory) "$(ArmTemplateFolder)"'
+ #customCommand: 'run build-preview export $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(ResourceGroup)/providers/Microsoft.DataFactory/factories/$(DataFactoryName) "$(ArmTemplateFolder)"'
   displayName: 'Validate and Generate ARM template'
 
 # Publish the artifact to be used as a source for a release pipeline.
@@ -58,3 +78,23 @@ steps:
     targetPath: '$(Build.Repository.LocalPath)/$(BuildFolder)/$(ArmTemplateFolder)' #replace with the package.json folder
     artifact: 'ArmTemplates'
     publishLocation: 'pipeline'
+
+# Configure Agent's Git Config (on occasion I've had a resource lock occur on this step - usually just re-run the build will work)
+
+- script: |
+   git config --local user.email buildagent@adfautopublish.com & git config --local user.name "ADFAutoPublishAgent"
+  workingDirectory: $(System.DefaultWorkingDirectory)
+  continueOnError: true  
+
+# Checkout relevant deployment branch, and commit ARM templates folder to this branch (bit like adf_publish branch, but one for main, one for release)
+
+- script: |
+   git checkout --orphan deployments/$(Build.SourceBranchName)-adf-templates 
+   git rm -rf --cached .
+   cp -r $(BuildFolder)/$(ArmTemplateFolder)/ $(ArmTemplateFolder)/
+   git add $(ArmTemplateFolder)
+   git commit -m "deployment $(Build.BuildNumber)"
+   git pull origin deployments/$(Build.SourceBranchName)-adf-templates --allow-unrelated-histories --no-edit --rebase --strategy-option theirs
+   git push --set-upstream origin deployments/$(Build.SourceBranchName)-adf-templates 
+  displayName: Commit ADF ARM Templates to deployments/$(Build.SourceBranchName)-adf-templates
+  workingDirectory: $(System.DefaultWorkingDirectory)
